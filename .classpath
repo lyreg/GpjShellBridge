@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre7"/>
+	<classpathentry kind="lib" path="C:/ST/matrix/workspaceAndroidGIT/libs/commons-codec-1.6.jar"/>
+	<classpathentry kind="lib" path="C:/ST/matrix/workspaceAndroidGIT/libs/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="C:/ST/matrix/workspaceAndroidGIT/libs/httpclient-4.2.5.jar"/>
+	<classpathentry kind="lib" path="C:/ST/matrix/workspaceAndroidGIT/libs/httpcore-4.2.4.jar"/>
+	<classpathentry kind="lib" path="C:/ST/matrix/workspaceAndroidGIT/libs/json-org.jar"/>
+	<classpathentry kind="lib" path="C:/ST/matrix/workspaceAndroidGIT/libs/signpost-commonshttp4-1.2.1.2.jar"/>
+	<classpathentry kind="lib" path="C:/ST/matrix/workspaceAndroidGIT/libs/signpost-core-1.2.1.2.jar"/>
+	<classpathentry kind="lib" path="/SimplyTappSESDKv0.1/libs/gpj.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
