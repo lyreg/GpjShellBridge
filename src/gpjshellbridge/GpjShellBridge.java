@@ -198,10 +198,34 @@ public class GpjShellBridge {
 	
 				@Override
 				public void run() {
-					String path = "java -classpath "+System.getProperty("java.class.path")+" net.sourceforge.gpj.cardservices.GlobalPlatformService -cmd -t Remote|localhost:"+localPort;
+					ProcessBuilder pb=null;
 					if(localScript!=null)
-						path+=" -s "+localScript;
-		            ProcessBuilder pb = new ProcessBuilder(path.split(" "));
+					{
+						String[] command = {
+	                            "java",
+	                            "-classpath", System.getProperty("java.class.path"),
+	                            "net.sourceforge.gpj.cardservices.GlobalPlatformService",
+	                            "-cmd",
+	                            "-t",
+	                            "Remote|localhost:" + localPort,
+	                            "-s",
+	                            localScript
+	                    };
+						pb = new ProcessBuilder(command);
+					}
+					else
+					{
+						String[] command = {
+	                            "java",
+	                            "-classpath", System.getProperty("java.class.path"),
+	                            "net.sourceforge.gpj.cardservices.GlobalPlatformService",
+	                            "-cmd",
+	                            "-t",
+	                            "Remote|localhost:" + localPort
+	                    };
+						pb = new ProcessBuilder(command);
+					}
+		            
 					try {
 						proc = pb.start();
 					} catch (IOException e) {
