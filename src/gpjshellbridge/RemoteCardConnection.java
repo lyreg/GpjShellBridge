@@ -8,10 +8,13 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.security.cert.Certificate;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 import oauth.signpost.OAuthConsumer;
 import oauth.signpost.exception.OAuthCommunicationException;
@@ -40,7 +43,7 @@ final class RemoteCardConnection {
 	private final static char BAD_PIN = '6';
     private final static String authHttpHost = "https://www.simplytapp.com/accounts/Api";
 
-    private Socket clientSocket = null;
+    private SSLSocket clientSocket = null;
     private InputStream is = null;
     private OutputStream os = null;
     private Cipher ecipherL;
@@ -156,15 +159,15 @@ final class RemoteCardConnection {
     	} catch (JSONException e){
            	throw new IOException("NO_CARD");
     	}
-    	String portStr=null;
+    	String sslPortStr=null;
     	try{
-    		portStr = (String)details.get("port");
+    		sslPortStr = (String)details.get("ssl_port");
     	} catch (JSONException e){
            	throw new IOException("NO_CARD");
     	}
-    	int port;
+    	int sslPort;
 		try {
-			port = Integer.parseInt(portStr);
+			sslPort = Integer.parseInt(sslPortStr);
 		} catch (NumberFormatException e) {
 	       	throw new IOException("NO_CARD");
 		}
@@ -178,7 +181,7 @@ final class RemoteCardConnection {
 		{
            	throw new IOException("NO_CARD");
 		}
-    	return new RemoteConnectionData(auth,ip,port);
+    	return new RemoteConnectionData(auth,ip,sslPort);
 	}
 	
 	void connect() throws IOException
@@ -189,8 +192,9 @@ final class RemoteCardConnection {
 		if(connectionData==null)
 			throw new IOException("NO_CARD");
 		try{
-			clientSocket = new Socket(connectionData.getIp(), connectionData.getPort());
-			clientSocket.setTcpNoDelay(true);
+            SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            clientSocket = (SSLSocket) sslsocketfactory.createSocket(connectionData.getIp(), connectionData.getPort());
+            clientSocket.setTcpNoDelay(true);
 	     	//open socket
 	     	is = clientSocket.getInputStream();
 	     	os = clientSocket.getOutputStream();
