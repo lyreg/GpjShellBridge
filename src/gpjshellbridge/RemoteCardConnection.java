@@ -5,10 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.security.cert.Certificate;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -257,31 +256,24 @@ final class RemoteCardConnection {
 	     	dcipherR.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
 
 	     	//validate and send back
-            byte[] out = new byte[0];
-            for (short i = 0; i < b.length; i++)
+	     	byte[] out = new byte[b.length];
+	     	int j=0;
+            for (int i = 0; i < b.length; i++)
             {
           	  	if (b[i] == '\n' || b[i] == '\\')
                 {
-                    byte[] tmp = new byte[out.length + 1];
-                    short j;
-                    for (j = 0; j < out.length; j++)
-                        tmp[j] = out[j];
-                    tmp[j] = (byte)'\\';
-                    out = tmp;
+          	  		byte[] tmp = new byte[out.length+1];
+          	  		System.arraycopy(out, 0, tmp, 0, out.length);
+          	  		out = tmp;
+          	  		out[j++] = '\\';
                 }
-                byte[] tmp = new byte[out.length + 1];
-                short j;
-                for (j = 0; j < out.length; j++)
-                    tmp[j] = out[j];
-                tmp[j] = b[i];
-                out = tmp;
+                out[j++] = b[i];
             }
-            byte[] tmp = new byte[out.length + 1];
-            short j;
-            for (j = 0; j < out.length; j++)
-                tmp[j] = out[j];
-            tmp[j] = (byte)'\n';
-            out = tmp;
+  	  		byte[] tmp = new byte[out.length+1];
+  	  		System.arraycopy(out, 0, tmp, 0, out.length);
+  	  		out = tmp;
+  	  		out[out.length-1] ='\n';
+  	  		
             //send out to socket
             sWrite(out);
             //read from socket for confirmation
@@ -354,15 +346,23 @@ final class RemoteCardConnection {
 	private byte[] sRead() throws IOException
 	{
         boolean esc=false;
-        byte[]in = new byte[0];
+		ByteBuffer pktBuffer = ByteBuffer.allocate(1000);
+
 		int r;
 		try{
         	while (true) 
     		{
+    			if(pktBuffer.position()==pktBuffer.limit())
+    			{
+    				ByteBuffer tmp = ByteBuffer.allocate(pktBuffer.position()+1000);
+    				tmp.put(pktBuffer.array());
+    				pktBuffer = tmp;
+    			}
+    			
     			r=is.read();
     			if(r==-1)
     				throw new IOException();
-    			if(!esc && r=='\n')
+    			if((!esc && r=='\n') || pktBuffer.position()>140000)
     				break;
     			
     			//manage escape state
@@ -375,19 +375,15 @@ final class RemoteCardConnection {
     				esc=false;
     			
     			if(!esc)
-    			{
-
-    				byte[] tmp = new byte[in.length+1];
-    				short i=0;
-					for(i=0;i<in.length;i++)
-						tmp[i]=in[i];
-					tmp[i]=(byte)(r&0xff);
-					in = tmp;
-    			}
+    				pktBuffer.put((byte)(r&0xff));
     		}
 		} catch (Exception e){
 			throw new IOException();
 		}
+		byte[] in = new byte[pktBuffer.position()];
+		pktBuffer.flip();
+		pktBuffer.get(in);
+
   	  	return in;
 	}
 
@@ -420,7 +416,7 @@ final class RemoteCardConnection {
     		{
     	    	//encrypt ping
     	    	byte[] eb = new byte[8-(b.length%8)+b.length];
-    	    	for(short i=0;i<eb.length;i++)
+    	    	for(int i=0;i<eb.length;i++)
     	    	{
     	    		if(i<b.length)
     	    			eb[i]=b[i];
@@ -434,31 +430,24 @@ final class RemoteCardConnection {
     	    	b = dcipherR.doFinal(b);
     	    	b = ecipherL.doFinal(b);
 
-    	    	byte[] out = new byte[0];
-	            for (short i = 0; i < b.length; i++)
-	            {
-	            	if (b[i] == '\n' || b[i] == '\\')
-	                {
-	                    byte[] tmp = new byte[out.length + 1];
-	                    short j;
-	                    for (j = 0; j < out.length; j++)
-	                        tmp[j] = out[j];
-	                    tmp[j] = (byte)'\\';
-	                    out = tmp;
-	                }
-	                byte[] tmp = new byte[out.length + 1];
-	                short j;
-	                for (j = 0; j < out.length; j++)
-	                    tmp[j] = out[j];
-	                tmp[j] = b[i];
-	                out = tmp;
-	            }
-	            byte[] tmp = new byte[out.length + 1];
-	            short j;
-	            for (j = 0; j < out.length; j++)
-	                tmp[j] = out[j];
-	            tmp[j] = (byte)'\n';
-	            out = tmp;
+    	     	byte[] out = new byte[b.length];
+    	     	int j=0;
+                for (short i = 0; i < b.length; i++)
+                {
+              	  	if (b[i] == '\n' || b[i] == '\\')
+                    {
+              	  		byte[] tmp = new byte[out.length+1];
+              	  		System.arraycopy(out, 0, tmp, 0, out.length);
+              	  		out = tmp;
+              	  		out[j++] = '\\';
+                    }
+                    out[j++] = b[i];
+                }
+      	  		byte[] tmp = new byte[out.length+1];
+      	  		System.arraycopy(out, 0, tmp, 0, out.length);
+      	  		out = tmp;
+      	  		out[out.length-1] ='\n';
+
 	            //send out to socket
 	            pinging = true;
 	            sWrite(out);
@@ -557,7 +546,7 @@ final class RemoteCardConnection {
     			{
 	    	    	//encrypt
 	    	    	byte[] eb = new byte[8-(buffer[k].length%8)+buffer[k].length];
-	    	    	for(short i=0;i<eb.length;i++)
+	    	    	for(int i=0;i<eb.length;i++)
 	    	    	{
 	    	    		if(i<buffer[k].length)
 	    	    			eb[i]=buffer[k][i];
@@ -572,36 +561,26 @@ final class RemoteCardConnection {
 	    	    	buffer[k] = ecipherL.doFinal(buffer[k]);
 	    	    	
 	    			//escape outgoing data
-	    	    	byte[] out = new byte[0];
-	    			byte[] tmp;
-	                for (short i = 0; i < buffer[k].length; i++)
+	    	     	byte[] out = new byte[buffer[k].length];
+	    	     	int j=0;
+	                for (int i = 0; i < buffer[k].length; i++)
 	                {
-	              	    if (buffer[k][i] == '\n' || buffer[k][i] == '\\')
+	              	  	if (buffer[k][i] == '\n' || buffer[k][i] == '\\')
 	                    {
-	                        tmp = new byte[out.length + 1];
-	                        short j;
-	                        for (j = 0; j < out.length; j++)
-	                            tmp[j] = out[j];
-	                        tmp[j] = (byte)'\\';
-	                        out = tmp;
+	              	  		byte[] tmp = new byte[out.length+1];
+	              	  		System.arraycopy(out, 0, tmp, 0, out.length);
+	              	  		out = tmp;
+	              	  		out[j++] = '\\';
 	                    }
-	                    tmp = new byte[out.length + 1];
-	                    short j;
-	                    for (j = 0; j < out.length; j++)
-	                        tmp[j] = out[j];
-	                    tmp[j] = buffer[k][i];
-	                    out = tmp;
+	                    out[j++] = buffer[k][i];
 	                }
-	                buffer[k] = out;
-	
-	    	    	tmp = new byte[buffer[k].length + 1];
-		            short j;
-		            for (j = 0; j < buffer[k].length; j++)
-		                tmp[j] = buffer[k][j];
-		            tmp[j] = (byte)'\n';
-		            buffer[k] = tmp;
+	      	  		byte[] tmp = new byte[out.length+1];
+	      	  		System.arraycopy(out, 0, tmp, 0, out.length);
+	      	  		out = tmp;
+	      	  		out[out.length-1] ='\n';
+
 		            //send out to socket		              
-		            sWrite(buffer[k]);
+		            sWrite(out);
     			}
     			return;
     		} catch (Exception e) {
@@ -630,8 +609,8 @@ final class RemoteCardConnection {
 	  		    	    byte[] eb = dcipherL.doFinal(in);
 	      	    	    eb = ecipherR.doFinal(eb);
 	      	    	    eb = dcipherL.doFinal(eb);
-	      	    	    short i;
-	      	    	    for(i=(short)eb.length;i>0;i--)
+	      	    	    int i;
+	      	    	    for(i=eb.length;i>0;i--)
 	      	    	    {
 	      	    		    if(eb[i-1]==(byte)0xff)
 	      	    			    break;
@@ -644,8 +623,7 @@ final class RemoteCardConnection {
 	      	    	    if(i>0)
 	      	    		  i--;
 	      	    	    in = new byte[i];
-	      	    	    for(i=0;i<in.length;i++)
-	      	    		    in[i]=eb[i];
+	      	    	    System.arraycopy(eb, 0, in, 0, in.length);
 		              
 	      	    	    try {
 	      	    		    transceiveData.setResponse(in);

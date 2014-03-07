@@ -334,18 +334,41 @@ public class GpjShellBridge {
     			if(r==-1)
     				throw new IOException();
     			a = r;
-    			r = is.read();
-    			if(r==-1)
-    				throw new IOException();
-    			b = r;
-    			r = is.read();
-    			if(r==-1)
-    				throw new IOException();
-    			len = (short)(0xFFFF&(r<<8));
-    			r = is.read();
-    			if(r==-1)
-    				throw new IOException();
-    			len |= r;
+    			if((a&0x40)!=0x40)
+    			{
+	    			r = is.read();
+	    			if(r==-1)
+	    				throw new IOException();
+	    			b = r;
+	    			r = is.read();
+	    			if(r==-1)
+	    				throw new IOException();
+	    			len = (int)(0xFF00&(r<<8));
+	    			r = is.read();
+	    			if(r==-1)
+	    				throw new IOException();
+	    			len |= r;
+    			}
+    			else
+    			{
+	    			r = is.read();
+	    			if(r==-1)
+	    				throw new IOException();
+	    			b = r;
+	    			r = is.read();
+	    			if(r==-1)
+	    				throw new IOException();
+	    			len = (int)(0xFF0000&(r<<16));
+	    			r = is.read();
+	    			if(r==-1)
+	    				throw new IOException();
+	    			len += (int)(0xFF00&(r<<8));
+	    			r = is.read();
+	    			if(r==-1)
+	    				throw new IOException();
+	    			len |= r;
+    			}
+    			a=(a&0xBF);
     			byte[] data = new byte[len]; 
     			for(int i=0;i<len;i++)
     			{
@@ -405,11 +428,21 @@ public class GpjShellBridge {
     				if(!jcShell)
     					System.out.println("unknown packet");
     			}
-    			
-    			os.write(a);
-    			os.write(b);
-    			os.write((byte)(data.length>>8));
-    			os.write((byte)(data.length&0xFF));
+    			if(data.length>0xffff)
+    			{
+	    			os.write(a|0x40);
+	    			os.write(b);
+	    			os.write((byte)(data.length>>16));
+	    			os.write((byte)(data.length>>8));
+	    			os.write((byte)(data.length&0xFF));
+    			}
+    			else
+    			{
+	    			os.write(a);
+	    			os.write(b);
+	    			os.write((byte)(data.length>>8));
+	    			os.write((byte)(data.length&0xFF));    				
+    			}
     			for(int i=0;i<data.length;i++)
     				os.write(data[i]);    			
      	    }

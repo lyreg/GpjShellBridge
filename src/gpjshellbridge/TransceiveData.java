@@ -97,19 +97,34 @@ final public class TransceiveData {
 		for(i=0;i<sndBuf.length;i++)
 		{
 			tmp[i] = new byte[sndBuf[i].length];
-			for(short k=0;k<sndBuf[i].length;k++)
-				tmp[i][k] = sndBuf[i][k];
+			System.arraycopy(sndBuf[i], 0, tmp[i], 0, sndBuf[i].length);
 		}
-		tmp[i] = new byte[apdu.length+4];
-		if(resp)
-			tmp[i][0]= channel;
+		if(apdu.length>0xffff)
+		{
+			tmp[tmp.length-1] = new byte[apdu.length+5];
+			if(resp)
+				tmp[tmp.length-1][0]= channel;
+			else
+				tmp[tmp.length-1][0] = (byte)(0x80|channel);
+			tmp[tmp.length-1][0]|=0x40;
+			tmp[tmp.length-1][1] = 0x00;
+			tmp[tmp.length-1][2] = (byte)((short)(apdu.length/(256*256))&0xff);
+			tmp[tmp.length-1][3] = (byte)((short)((apdu.length%(256*256))/256)&0xff);
+			tmp[tmp.length-1][4] = (byte)((short)(apdu.length%256)&0xff);
+			System.arraycopy(apdu, 0, tmp[tmp.length-1], 5, apdu.length);
+		}
 		else
-			tmp[i][0] = (byte)(0x80|channel);
-		tmp[i][1] = 0x00;
-		tmp[i][2] = (byte)((short)(apdu.length/256)&0xff);
-		tmp[i][3] = (byte)((short)(apdu.length%256)&0xff);
-		for(short k=0;k<apdu.length;k++)
-			tmp[i][k+4] = apdu[k];
+		{
+			tmp[tmp.length-1] = new byte[apdu.length+4];
+			if(resp)
+				tmp[tmp.length-1][0]= channel;
+			else
+				tmp[tmp.length-1][0] = (byte)(0x80|channel);
+			tmp[tmp.length-1][1] = 0x00;
+			tmp[tmp.length-1][2] = (byte)((short)(apdu.length/256)&0xff);
+			tmp[tmp.length-1][3] = (byte)((short)(apdu.length%256)&0xff);
+			System.arraycopy(apdu, 0, tmp[tmp.length-1], 4, apdu.length);
+		}
 		sndBuf = tmp;
 	}
 
@@ -123,8 +138,7 @@ final public class TransceiveData {
 		for(short i=0;i<tmp.length;i++)
 		{
 			tmp[i] = new byte[recBuf[i+1].length];
-			for(short k=0;k<recBuf[i+1].length;k++)
-				tmp[i][k] = recBuf[i+1][k];
+			System.arraycopy(recBuf[i+1], 0, tmp[i], 0, recBuf[i+1].length);
 		}
 		recBuf=tmp;
 		return tmp2;
@@ -160,9 +174,9 @@ final public class TransceiveData {
 		}
 		if(responses==null || responses.length<1)
 			throw new IOException("INVALID_DATA");
-		if(in.length>=4)
+		if((in.length>=4 && (in[0]&0x40)!=0x40) || (in.length>=5 && (in[0]&0x40)==0x40))
 		{
-			if(responses[0]!=in[0])
+			if((responses[0]&0xBF)!=(in[0]&0xBF))
 			{
 				clear();
 				throw new IOException("INVALID_DATA");
@@ -172,9 +186,19 @@ final public class TransceiveData {
 			for(short i=0;i<tmp2.length;i++)
 				tmp2[i] = responses[i+1];
 			responses = tmp2;
-				
-			short len = (short)((short)(in[2]&0xff)*256+(short)(in[3]&0xff));
-			if(len==(short)(in.length-4))
+			int len = 0;
+			int offset = 0;
+			if((in[0]&0x40)!=0x40)
+			{
+				offset = 4;
+				len = (int)(in[2]&0xff)*256+(int)(in[3]&0xff);
+			}
+			else
+			{
+				offset = 5;
+				len = (int)(in[2]&0xff)*256*256+(int)(in[3]&0xff)*256+(short)(in[4]&0xff);				
+			}
+			if(len==(int)(in.length-offset))
 			{
 				//move responses to respBuf
 				if(recBuf==null)
@@ -184,12 +208,10 @@ final public class TransceiveData {
 				for(i=0;i<recBuf.length;i++)
 				{
 					tmp[i] = new byte[recBuf[i].length];
-					for(short k=0;k<recBuf[i].length;k++)
-						tmp[i][k] = recBuf[i][k];
+					System.arraycopy(recBuf[i], 0, tmp[i], 0, recBuf[i].length);
 				}
 				tmp[i] = new byte[len];
-				for(short k=0;k<len;k++)
-					tmp[i][k] = in[4+k];
+				System.arraycopy(in,offset,tmp[i],0,len);
 				recBuf = tmp;
 			}
 			else
