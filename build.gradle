@@ -35,3 +35,8 @@ jar {
    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
    manifest { attributes 'Main-Class': 'gpjshellbridge.GpjShellBridge' }
 }
+
+task deployToSdk(type: Copy, dependsOn: build) {
+    from "${buildDir}/libs/${project.name}.jar" 
+    into '../java/IssuerSdkBundle/utils'
+}
