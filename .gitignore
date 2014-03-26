@@ -5,10 +5,12 @@
 *.war
 *.ear
 bin
-build
+build/classes
+build/tmp
+build/dependency-cache
 target
 
-!**/release/*.jar
+!build/libs/STBridge.jar
 
 #eclipse
 .classpath
