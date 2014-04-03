@@ -45,15 +45,14 @@ final class RemoteCardConnection {
     private SSLSocket clientSocket = null;
     private InputStream is = null;
     private OutputStream os = null;
-    private Cipher ecipherL;
-    private Cipher dcipherL;
-    private Cipher ecipherR;
-    private Cipher dcipherR;
 	private Thread tPing = null;
 	private boolean transceiving = false;
 	private boolean pinging = false;
 	private boolean writing = false;
 	private OAuthConsumer consumer = null;
+
+	private byte[] kL = null;
+	private byte[] kR = null;
 
 	RemoteCardConnection(OAuthConsumer consumer) throws IOException
 	{
@@ -213,7 +212,7 @@ final class RemoteCardConnection {
    			    	b[i/2] = (byte)(short)(((short)(b[i/2]&0xff)|ch)&0xff);
 	     	}
 
-	     	byte[] kL = new byte[8];
+	     	kL = new byte[8];
 	     	for(short i=0;i<kL.length*2;i++)
 	     	{
 	     		byte ch = (byte)connectionData.getAuth().toCharArray()[i+b.length*2];
@@ -228,7 +227,7 @@ final class RemoteCardConnection {
    			  	else
    			  		kL[i/2] = (byte)(short)(((short)(kL[i/2]&0xff)|ch)&0xff);
 	     	}
-	     	byte[] kR = new byte[8];
+	     	kR = new byte[8];
 	     	for(short i=0;i<kR.length*2;i++)
 	     	{
 	     		byte ch = (byte)connectionData.getAuth().toCharArray()[i+b.length*2+kL.length*2];
@@ -246,12 +245,12 @@ final class RemoteCardConnection {
 
 	     	//setup encryption/decryption ciphers
 	     	IvParameterSpec iv = new IvParameterSpec(new byte[8]);
-	     	ecipherL = Cipher.getInstance("DES/CBC/NoPadding");
-	     	dcipherL = Cipher.getInstance("DES/CBC/NoPadding");
+	     	Cipher ecipherL = Cipher.getInstance("DES/CBC/NoPadding");
+	     	Cipher dcipherL = Cipher.getInstance("DES/CBC/NoPadding");
 	     	ecipherL.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kL, "DES"),iv);
 	     	dcipherL.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kL, "DES"),iv);
-	     	ecipherR = Cipher.getInstance("DES/CBC/NoPadding");
-	     	dcipherR = Cipher.getInstance("DES/CBC/NoPadding");
+	     	Cipher ecipherR = Cipher.getInstance("DES/CBC/NoPadding");
+	     	Cipher dcipherR = Cipher.getInstance("DES/CBC/NoPadding");
 	     	ecipherR.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
 	     	dcipherR.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
 
@@ -414,7 +413,17 @@ final class RemoteCardConnection {
     	{
     		try
     		{
-    	    	//encrypt ping
+    	     	IvParameterSpec iv = new IvParameterSpec(new byte[8]);
+    	     	Cipher ecipherL = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	Cipher dcipherL = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	ecipherL.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kL, "DES"),iv);
+    	     	dcipherL.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kL, "DES"),iv);
+    	     	Cipher ecipherR = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	Cipher dcipherR = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	ecipherR.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
+    	     	dcipherR.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
+
+    	     	//encrypt ping
     	    	byte[] eb = new byte[8-(b.length%8)+b.length];
     	    	for(int i=0;i<eb.length;i++)
     	    	{
@@ -542,7 +551,17 @@ final class RemoteCardConnection {
     	{
     		try
     		{
-    			for(short k=0;k<buffer.length;k++)
+    	     	IvParameterSpec iv = new IvParameterSpec(new byte[8]);
+    	     	Cipher ecipherL = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	Cipher dcipherL = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	ecipherL.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kL, "DES"),iv);
+    	     	dcipherL.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kL, "DES"),iv);
+    	     	Cipher ecipherR = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	Cipher dcipherR = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	ecipherR.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
+    	     	dcipherR.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
+
+    	     	for(short k=0;k<buffer.length;k++)
     			{
 	    	    	//encrypt
 	    	    	byte[] eb = new byte[8-(buffer[k].length%8)+buffer[k].length];
@@ -595,7 +614,17 @@ final class RemoteCardConnection {
     	{
     		try
     		{
-    			while(transceiveData.getResponseNumber()>0)
+    	     	IvParameterSpec iv = new IvParameterSpec(new byte[8]);
+    	     	Cipher ecipherL = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	Cipher dcipherL = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	ecipherL.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kL, "DES"),iv);
+    	     	dcipherL.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kL, "DES"),iv);
+    	     	Cipher ecipherR = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	Cipher dcipherR = Cipher.getInstance("DES/CBC/NoPadding");
+    	     	ecipherR.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
+    	     	dcipherR.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kR, "DES"), iv);
+
+    	     	while(transceiveData.getResponseNumber()>0)
     			{
     				//read from socket for confirmation
 	                clientSocket.setSoTimeout(transceiveData.getTimeout()); //set timeout
