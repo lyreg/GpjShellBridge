@@ -322,7 +322,7 @@ final class RemoteCardConnection {
     	return false;
     }
 
-	private void sWrite(byte[] buffer) throws IOException
+    synchronized private void sWrite(byte[] buffer) throws IOException
 	{
 		while(writing)
 		{
@@ -342,7 +342,7 @@ final class RemoteCardConnection {
 		}		
 	}
 
-	private byte[] sRead() throws IOException
+    synchronized private byte[] sRead() throws IOException
 	{
         boolean esc=false;
 		ByteBuffer pktBuffer = ByteBuffer.allocate(1000);
