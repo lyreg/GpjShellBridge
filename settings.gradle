@@ -1,1 +1,3 @@
 rootProject.name = 'STBridge'
+include ':gpjNG'
+project(':gpjNG').projectDir = new File(settingsDir, '../gpjNG')
