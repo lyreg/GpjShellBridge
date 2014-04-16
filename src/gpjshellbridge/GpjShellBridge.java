@@ -15,6 +15,8 @@ import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
 
 public class GpjShellBridge {
 
+	static String service = "https://www.simplytapp.com/accounts/Api";
+	
 	private static String byteArrayToString(byte[] ba)
 	{
 	    String s = "";
@@ -54,6 +56,7 @@ public class GpjShellBridge {
 
 	    		System.out.println("Usage:");
 	    		System.out.println("java -jar STBridge.jar -ck consumer_key -cs consumer_secreet -at access_token -ts access_secret -p port_number [-i NFC or T0] [-s path/to/script/ending/in/.jcsh] [-noshell]");
+	    		System.out.println("-service  the remote service");
 	    		System.out.println("-ck  the issuer consumer key");
 	    		System.out.println("-cs  the issuer consumer secret");
 	    		System.out.println("-at  the card access token");
@@ -64,6 +67,12 @@ public class GpjShellBridge {
 	    		System.out.println("-noshell  (do this if you would like to use your own Shell tool to connect to the cloud through JCRemoteTermial)");
 	    		System.exit(-1);
 				return;
+			case "-service":
+			case "--service":
+				i++;
+				if(i<args.length)
+					service = args[i];
+				break;
 			case "-p":
 			case "--port":
 				try {

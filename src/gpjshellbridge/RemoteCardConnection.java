@@ -40,7 +40,7 @@ final class RemoteCardConnection {
 	private final static char SOCKET_ERR = '4';
 	private final static char NO_PIN = '5';
 	private final static char BAD_PIN = '6';
-    private final static String authHttpHost = "https://www.simplytapp.com/accounts/Api";
+    private final static String authHttpHost = GpjShellBridge.service;
 
     private SSLSocket clientSocket = null;
     private InputStream is = null;
@@ -276,7 +276,7 @@ final class RemoteCardConnection {
             //send out to socket
             sWrite(out);
             //read from socket for confirmation
-            clientSocket.setSoTimeout(5000);  //5 second timeout
+            clientSocket.setSoTimeout(15000);  //15 second timeout
             byte[] in = sRead();
             clientSocket.setSoTimeout(0);
 	    	  
@@ -462,7 +462,7 @@ final class RemoteCardConnection {
 	            sWrite(out);
 	              
 	            //read from socket for confirmation
-	            clientSocket.setSoTimeout(2000);  //2 second timeout
+	            clientSocket.setSoTimeout(15000);  //15 second timeout
 	            byte[] in = sRead();
 	            pinging = false;
 		    	clientSocket.setSoTimeout(0);

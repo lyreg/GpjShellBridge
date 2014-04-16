@@ -9,7 +9,7 @@ final public class TransceiveData {
 	public static final byte SOFT_CHANNEL = 0x21;
 	public static final byte DEVICE_CHANNEL = 0x31;
 	
-	private final static short defaultTo = 2000;
+	private final static short defaultTo = 15000;
 	private byte[][] sndBuf = null;
 	private short to=defaultTo;  //default
 	private byte[]  responses = null;
