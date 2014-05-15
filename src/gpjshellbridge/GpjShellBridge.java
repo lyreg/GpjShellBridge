@@ -36,7 +36,7 @@ public class GpjShellBridge {
     	int port = 0;
     	String script = null;
     	
-		for(short i=0;i<args.length;i++)
+		for(int i=0;i<args.length;i++)
 		{
 			switch(args[i])
 			{

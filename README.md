@@ -1,14 +1,13 @@
 GpjShellBridge
 ==============
 
-connects and allows a shell to a remote simplytapp cloud card
-
+Connects and allows a shell to a remote SimplyTapp cloud card.
 
 About
 =====
-this application allows you to connect to a single cloud card
-within the simplytapp domain
-it can be used as an interactive shell or be passed in a script
+This application allows you to connect to a single cloud card
+within the SimplyTapp domain. It can be used as an interactive
+shell or with a passed in a script.
 
 Paramaters
 ==========
