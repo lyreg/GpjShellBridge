@@ -189,6 +189,7 @@ final class RemoteCardConnection {
 		RemoteConnectionData connectionData = auth();
 		if(connectionData==null)
 			throw new IOException("NO_CARD");
+		System.out.println("Connecting to card at "+connectionData.getIp()+":"+connectionData.getPort());
 		try{
             SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
             clientSocket = (SSLSocket) sslsocketfactory.createSocket(connectionData.getIp(), connectionData.getPort());
